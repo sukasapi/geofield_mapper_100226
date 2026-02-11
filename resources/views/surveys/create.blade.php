@@ -8,7 +8,7 @@
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <form id="survey-create-form" action="{{ route('surveys.store') }}" method="POST" x-data="surveyForm()" data-initial-fields="{{ e(json_encode(old('fields', [['type' => 'text', 'label' => '', 'name' => '', 'required' => false, 'optionsText' => '']]))) }}">
+                <form id="survey-create-form" action="{{ route('surveys.store') }}" method="POST" x-data="surveyForm" data-initial-fields="{{ e(json_encode(old('fields', [['type' => 'text', 'label' => '', 'name' => '', 'required' => false, 'optionsText' => '']]))) }}">
                     @csrf
                     <div class="mb-6">
                         <label for="name" class="block text-sm font-medium text-gray-700">Nama Survey *</label>
@@ -21,6 +21,7 @@
                             <label class="block text-sm font-medium text-gray-700">Field (pertanyaan)</label>
                             <button type="button" @click="addField()" class="text-sm text-indigo-600 hover:text-indigo-800">+ Tambah field</button>
                         </div>
+                        @error('fields')<p class="mt-1 text-sm text-red-600 mb-2">{{ $message }}</p>@enderror
                         <template x-for="(field, i) in fields" :key="i">
                             <div class="border border-gray-200 rounded-md p-4 mb-3 bg-gray-50">
                                 <input type="hidden" :name="'fields[' + i + '][type]'" :value="field.type">
@@ -62,20 +63,32 @@
 
     @push('scripts')
     <script>
-        function surveyForm() {
-            const form = document.getElementById('survey-create-form');
-            const raw = (form && form.getAttribute('data-initial-fields')) || '[]';
-            const fields = JSON.parse(raw);
-            return {
-                fields: Array.isArray(fields) && fields.length ? fields : [{ type: 'text', label: '', name: '', required: false, optionsText: '' }],
-                addField() {
-                    this.fields.push({ type: 'text', label: '', name: '', required: false, optionsText: '' });
-                },
-                removeField(i) {
-                    this.fields.splice(i, 1);
-                }
-            };
+        function registerSurveyForm() {
+            if (typeof Alpine === 'undefined') return;
+            Alpine.data('surveyForm', function() {
+                return {
+                    fields: [],
+                    init() {
+                        var el = this.$el;
+                        var raw = (el && el.getAttribute('data-initial-fields')) || '[]';
+                        try {
+                            var parsed = JSON.parse(raw);
+                            this.fields = Array.isArray(parsed) && parsed.length ? parsed : [{ type: 'text', label: '', name: '', required: false, optionsText: '' }];
+                        } catch (e) {
+                            this.fields = [{ type: 'text', label: '', name: '', required: false, optionsText: '' }];
+                        }
+                    },
+                    addField() {
+                        this.fields.push({ type: 'text', label: '', name: '', required: false, optionsText: '' });
+                    },
+                    removeField(i) {
+                        this.fields.splice(i, 1);
+                    }
+                };
+            });
         }
+        document.addEventListener('alpine:init', registerSurveyForm);
+        if (window.Alpine) registerSurveyForm();
     </script>
     @endpush
 </x-app-layout>

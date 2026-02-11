@@ -16,7 +16,7 @@ class ImportedRecord extends Model
         'lng',
         'attributes',
     ];
-
+ 
     protected function casts(): array
     {
         return [

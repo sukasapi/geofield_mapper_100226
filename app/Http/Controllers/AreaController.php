@@ -47,7 +47,7 @@ class AreaController extends Controller
         $area = new Area($data);
         $area->user_id = $request->user()?->id;
         $area->save();
-
+ 
         if ($request->wantsJson()) {
             return response()->json($area->load([]), 201);
         }
